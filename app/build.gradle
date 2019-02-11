@@ -23,8 +23,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':itemtouchhelperextension')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':itemtouchhelperextension')
     implementation libs.appcompatV7
     implementation libs.design
 }

@@ -533,7 +533,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
     private void setupCallbacks() {
         ViewConfiguration vc = ViewConfiguration.get(mRecyclerView.getContext());
-        mSlop = vc.getScaledTouchSlop();
+        mSlop = vc.getScaledTouchSlop() / 2;
         mRecyclerView.addItemDecoration(this);
         mRecyclerView.addOnItemTouchListener(mOnItemTouchListener);
         mRecyclerView.addOnChildAttachStateChangeListener(this);
