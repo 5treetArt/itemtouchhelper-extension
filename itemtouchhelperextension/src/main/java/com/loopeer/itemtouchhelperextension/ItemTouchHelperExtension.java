@@ -349,7 +349,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
                     if (activePointerIndex >= 0) {
                         updateDxDy(event, mSelectedFlags, activePointerIndex);
                         if (Math.abs(event.getX() - mLastX) > mSlop) mClick = false;
-                        mLastX = event.getX();
+                        //mLastX = event.getX();
                         moveIfNecessary(viewHolder);
                         mRecyclerView.removeCallbacks(mScrollRunnable);
                         mScrollRunnable.run();
