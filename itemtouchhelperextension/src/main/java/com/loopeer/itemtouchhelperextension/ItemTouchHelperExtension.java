@@ -17,14 +17,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.ViewHolder;
 import android.support.v7.widget.helper.ItemTouchUIUtil;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.HapticFeedbackConstants;
-import android.view.MotionEvent;
-import android.view.VelocityTracker;
-import android.view.View;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
-import android.view.ViewParent;
+import android.view.*;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 
@@ -207,6 +200,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
     private int mSlop;
 
     private RecyclerView mRecyclerView;
+    private ValueAnimator mDemoSwipe = null;
 
     /**
      * When user drags a view to the edge, we start scrolling the LayoutManager as long as View
@@ -268,6 +262,11 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
         @Override
         public boolean onInterceptTouchEvent(RecyclerView recyclerView, MotionEvent event) {
+            if (mDemoSwipe != null) {
+                select(null, ACTION_STATE_SWIPE);
+                mDemoSwipe.cancel();
+                mDemoSwipe = null;
+            }
             mGestureDetector.onTouchEvent(event);
             if (DEBUG) {
                 Log.d(TAG, "intercept: x:" + event.getX() + ",y:" + event.getY() + ", " + event);
@@ -321,6 +320,11 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
         @Override
         public void onTouchEvent(RecyclerView recyclerView, MotionEvent event) {
+            if (mDemoSwipe != null) {
+                select(null, ACTION_STATE_SWIPE);
+                mDemoSwipe.cancel();
+                mDemoSwipe = null;
+            }
             mGestureDetector.onTouchEvent(event);
             if (DEBUG) {
                 Log.d(TAG,
@@ -1188,6 +1192,80 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
         obtainVelocityTracker();
         mDx = mDy = 0f;
         select(viewHolder, ACTION_STATE_SWIPE);
+    }
+
+    /**
+     * Метод сдвигает элемент на dx
+     *
+     * @param viewHolder ViewHolder
+     * @param dx         int
+     */
+    public void demoSwipe(final ViewHolder viewHolder, int dx) {
+        startSwipe(viewHolder);
+        mDemoSwipe = ValueAnimator.ofInt(0, 40);
+        mDemoSwipe.setDuration(10000);
+
+        mDemoSwipe.setInterpolator(new Interpolator() {
+            @Override
+            public float getInterpolation(float input) {
+                if (input < 1f / 16f) {
+                    return (float) Math.sin(Math.PI * input * 16f);
+                } else if (input < 3f / 16f) {
+                    return 0f;
+                } else if (input < 4f / 16f) {
+                    return (float) Math.sin(Math.PI * (input - 3f / 16f) * 16f);
+                } else if (input < 6f / 16f) {
+                    return 0f;
+                } else if (input < 7f / 16f) {
+                    return (float) Math.sin(Math.PI * (input - 6f / 16f) * 16f);
+                } else if (input < 9f / 16f) {
+                    return 0f;
+                } else if (input < 10f / 16f) {
+                    return (float) Math.sin(Math.PI * (input - 9f / 16f) * 16f);
+                } else if (input < 12f / 16f) {
+                    return 0f;
+                } else if (input < 13f / 16f) {
+                    return (float) Math.sin(Math.PI * (input - 12f / 16f) * 16f);
+                } else if (input < 15f / 16f) {
+                    return 0f;
+                } else {
+                    return (float) Math.sin(Math.PI * (input - 15f / 16f) * 16f);
+                }
+            }
+        });
+
+        mDemoSwipe.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                Log.d("DBG", "updateListener");
+                mDx = Integer.valueOf(animation.getAnimatedValue().toString());
+                moveIfNecessary(viewHolder);
+                mRecyclerView.removeCallbacks(mScrollRunnable);
+                mScrollRunnable.run();
+                mRecyclerView.invalidate();
+                viewHolder.itemView.invalidate();
+            }
+        });
+        mDemoSwipe.start();
+
+        mDemoSwipe.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mDemoSwipe = null;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+            }
+        });
     }
 
     private RecoverAnimation findAnimation(MotionEvent event) {
