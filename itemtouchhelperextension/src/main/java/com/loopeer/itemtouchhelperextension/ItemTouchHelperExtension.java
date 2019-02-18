@@ -201,6 +201,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
     private RecyclerView mRecyclerView;
     private ValueAnimator mDemoSwipe = null;
+    private Boolean isAnimatedCloseOpenedPreItem = false;
 
     /**
      * When user drags a view to the edge, we start scrolling the LayoutManager as long as View
@@ -413,6 +414,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
         objectAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
+                isAnimatedCloseOpenedPreItem = true;
                 super.onAnimationStart(animation);
                 if (mPreOpened != null) mCallback.clearView(mRecyclerView, mPreOpened);
                 if (mPreOpened != null) mPendingCleanup.remove(mPreOpened.itemView);
@@ -422,6 +424,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
             @Override
             public void onAnimationEnd(Animator animation) {
+                isAnimatedCloseOpenedPreItem = false;
                 super.onAnimationEnd(animation);
                 mRecoverAnimations.clear();
             }
@@ -670,40 +673,42 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
                 getSelectedDxDy(mTmpPosition);
                 final float currentTranslateX = mTmpPosition[0];
                 final float currentTranslateY = mTmpPosition[1];
-                final RecoverAnimation rv = new RecoverAnimation(prevSelected, animationType,
-                        prevActionState, currentTranslateX, currentTranslateY,
-                        targetTranslateX, targetTranslateY) {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        if (this.mOverridden) {
-                            return;
-                        }
-                        if (swipeDir <= 0) {
-                            // this is a drag or failed swipe. recover immediately
-                            mCallback.clearView(mRecyclerView, prevSelected);
-                        } else {
-                            // wait until remove animation is complete.
-                            mPendingCleanup.add(prevSelected.itemView);
-                            mPreOpened = prevSelected;
-                            mIsPendingCleanup = true;
-                            if (swipeDir > 0) {
-                                // Animation might be ended by other animators during a layout.
-                                // We defer callback to avoid editing adapter during a layout.
-                                postDispatchSwipe(this, swipeDir);
+                if (!isAnimatedCloseOpenedPreItem) {
+                    final RecoverAnimation rv = new RecoverAnimation(prevSelected, animationType,
+                            prevActionState, currentTranslateX, currentTranslateY,
+                            targetTranslateX, targetTranslateY) {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            super.onAnimationEnd(animation);
+                            if (this.mOverridden) {
+                                return;
+                            }
+                            if (swipeDir <= 0) {
+                                // this is a drag or failed swipe. recover immediately
+                                mCallback.clearView(mRecyclerView, prevSelected);
+                            } else {
+                                // wait until remove animation is complete.
+                                mPendingCleanup.add(prevSelected.itemView);
+                                mPreOpened = prevSelected;
+                                mIsPendingCleanup = true;
+                                if (swipeDir > 0) {
+                                    // Animation might be ended by other animators during a layout.
+                                    // We defer callback to avoid editing adapter during a layout.
+                                    postDispatchSwipe(this, swipeDir);
+                                }
+                            }
+                            // removed from the list after it is drawn for the last time
+                            if (mOverdrawChild == prevSelected.itemView) {
+                                removeChildDrawingOrderCallbackIfNecessary(prevSelected.itemView);
                             }
                         }
-                        // removed from the list after it is drawn for the last time
-                        if (mOverdrawChild == prevSelected.itemView) {
-                            removeChildDrawingOrderCallbackIfNecessary(prevSelected.itemView);
-                        }
-                    }
-                };
-                final long duration = mCallback.getAnimationDuration(mRecyclerView, animationType,
-                        targetTranslateX - currentTranslateX, targetTranslateY - currentTranslateY);
-                rv.setDuration(duration);
-                mRecoverAnimations.add(rv);
-                rv.start();
+                    };
+                    final long duration = mCallback.getAnimationDuration(mRecyclerView, animationType,
+                            targetTranslateX - currentTranslateX, targetTranslateY - currentTranslateY);
+                    rv.setDuration(duration);
+                    mRecoverAnimations.add(rv);
+                    rv.start();
+                }
                 preventLayout = true;
             } else {
                 removeChildDrawingOrderCallbackIfNecessary(prevSelected.itemView);
@@ -1237,7 +1242,6 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
         mDemoSwipe.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
-                Log.d("DBG", "updateListener");
                 mDx = Integer.valueOf(animation.getAnimatedValue().toString());
                 moveIfNecessary(viewHolder);
                 mRecyclerView.removeCallbacks(mScrollRunnable);
@@ -2562,7 +2566,6 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
         @Override
         public void onAnimationStart(Animator animation) {
-
         }
 
         @Override
@@ -2580,7 +2583,6 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
         @Override
         public void onAnimationRepeat(Animator animation) {
-
         }
     }
 
