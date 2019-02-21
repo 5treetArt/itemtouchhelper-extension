@@ -296,10 +296,17 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
                         updateDxDy(event, mSelectedFlags, 0);
                     }
                 }
+                View child = findChildView(event);
+                if (child != null) {
+                    mCallback.onStartTouch(mRecyclerView.getChildViewHolder(child));
+                }
             } else if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
                 mActivePointerId = ACTIVE_POINTER_ID_NONE;
                 if (mClick && action == MotionEvent.ACTION_UP) {
                     doChildClickEvent(event.getRawX(), event.getRawY());
+                }
+                if (action == MotionEvent.ACTION_UP) {
+                    mCallback.onEndTouch(mSelected);
                 }
                 select(null, ACTION_STATE_IDLE);
             } else if (mActivePointerId != ACTIVE_POINTER_ID_NONE) {
@@ -372,6 +379,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
                         doChildClickEvent(event.getRawX(), event.getRawY());
                     }
                     mClick = false;
+                    mCallback.onEndTouch(mSelected);
                     select(null, ACTION_STATE_IDLE);
                     mActivePointerId = ACTIVE_POINTER_ID_NONE;
                     break;
@@ -2317,6 +2325,16 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
             }
             return value;
         }
+
+        /**
+         * Обработчик события начала жеста
+         */
+        public void onStartTouch(ViewHolder viewHolder) {}
+
+        /**
+         * Обработчик события окончания жеста
+         */
+        public void onEndTouch(ViewHolder viewHolder) {}
     }
 
     /**
