@@ -427,14 +427,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
             @Override
             public void onAnimationEnd(Animator animation) {
                 super.onAnimationEnd(animation);
-                final int recoverAnimSize = mRecoverAnimations.size();
-                for (int i = recoverAnimSize - 1; i >= 0; i--) {
-                    if (mRecoverAnimations.get(i).mViewHolder == mPreOpened) {
-                        mRecoverAnimations.remove(i);
-                        break;
-                    }
-                }
-                //mRecoverAnimations.clear();
+                mRecoverAnimations.clear();
             }
         });
 
@@ -548,7 +541,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
 
     private void setupCallbacks() {
         ViewConfiguration vc = ViewConfiguration.get(mRecyclerView.getContext());
-        mSlop = vc.getScaledTouchSlop() / 2;
+        mSlop = vc.getScaledTouchSlop();
         mRecyclerView.addItemDecoration(this);
         mRecyclerView.addOnItemTouchListener(mOnItemTouchListener);
         mRecyclerView.addOnChildAttachStateChangeListener(this);
@@ -697,7 +690,7 @@ public class ItemTouchHelperExtension extends RecyclerView.ItemDecoration
                             // wait until remove animation is complete.
                             mPendingCleanup.add(prevSelected.itemView);
                             mPreOpened = prevSelected;
-                            //mIsPendingCleanup = true;
+                            mIsPendingCleanup = true;
                             if (swipeDir > 0) {
                                 // Animation might be ended by other animators during a layout.
                                 // We defer callback to avoid editing adapter during a layout.
